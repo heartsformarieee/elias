@@ -372,7 +372,17 @@ async function sendMessage(
   statusText.textContent =
     "typing...";
 
+  
+typingIndicator.classList.remove(
+  "hidden"
+);
 
+  
+  typingIndicator.classList.add(
+  "hidden"
+);
+
+  
   showMessage(
     "..."
   );
