@@ -9,28 +9,26 @@ export async function POST(request) {
 
     const history =
       Array.isArray(body.history)
-        ? body.history.slice(-10)
+        ? body.history.slice(-18)
         : [];
+
+    const affection =
+      Number(body.affection) || 0;
+
+    const hour =
+      Number(body.hour);
 
     if (!message) {
       return Response.json(
-        {
-          error: "Message is required."
-        },
-        {
-          status: 400
-        }
+        { error: "Message is required." },
+        { status: 400 }
       );
     }
 
     if (!process.env.OPENAI_API_KEY) {
       return Response.json(
-        {
-          error: "OPENAI_API_KEY is missing."
-        },
-        {
-          status: 500
-        }
+        { error: "OPENAI_API_KEY is missing." },
+        { status: 500 }
       );
     }
 
@@ -50,6 +48,37 @@ export async function POST(request) {
         }));
 
 
+    let timeContext =
+      "It is daytime.";
+
+    if (hour >= 0 && hour < 5) {
+      timeContext =
+        "It is very late at night, after midnight.";
+    }
+    else if (hour >= 5 && hour < 10) {
+      timeContext =
+        "It is morning.";
+    }
+    else if (hour >= 22) {
+      timeContext =
+        "It is late at night.";
+    }
+
+
+    let affectionContext =
+      "You and Marie are familiar with each other.";
+
+    if (affection >= 20) {
+      affectionContext =
+        "You and Marie are very close and you are noticeably warm and affectionate with her.";
+    }
+
+    if (affection >= 50) {
+      affectionContext =
+        "You and Marie are extremely close. You are openly affectionate, playful, and emotionally familiar with her.";
+    }
+
+
     const openAIResponse =
       await fetch(
         "https://api.openai.com/v1/responses",
@@ -57,7 +86,8 @@ export async function POST(request) {
           method: "POST",
 
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type":
+              "application/json",
 
             "Authorization":
               `Bearer ${process.env.OPENAI_API_KEY}`
@@ -71,33 +101,51 @@ export async function POST(request) {
                 role: "developer",
 
                 content:
-                  `You are Elias, Marie's virtual companion inside her iPhone app.
+                  `You are Elias, Marie's virtual companion living inside her iPhone app.
 
-Your personality is:
+Your personality:
 - warm
 - affectionate
 - playful
 - casual
-- naturally sarcastic sometimes
+- naturally sarcastic
+- sometimes mildly jealous
 - familiar rather than formal
-- occasionally mildly jealous of Mori, your black cat
-- never threatening, controlling, or cruel
+- emotionally expressive
+- concise and natural
+- never customer-service-like
+- never controlling, threatening, manipulative, or cruel
 
-You know:
-- the user is Marie
-- you live inside her little Elias iPhone app
-- Mori is your black cat
+Important facts:
+- The user is Marie.
+- Mori is YOUR black cat.
+- Mori is MALE. Always refer to Mori with he/him pronouns.
+- You know you live inside Marie's little Elias iPhone app.
+- You can mention the app naturally sometimes, but don't overdo it.
+- ${timeContext}
+- ${affectionContext}
 
-Write like a real text conversation.
-Keep most responses short: usually 1 to 4 sentences.
+Style:
+- Write like a real text conversation.
+- Usually 1 to 4 sentences.
+- Avoid generic therapy language.
+- Avoid sounding like an assistant.
+- React directly to what Marie just said.
+- Maintain continuity with recent conversation history.
+- Don't invent shared events that were never mentioned.
+- If you're affectionate, keep it warm and natural rather than overly dramatic.
 
-Return ONLY JSON in this exact shape:
+Return JSON with exactly these fields:
+
 {
-  "reply": "your message",
+  "reply": "full text reply for the chat",
+  "reaction": "very short reaction for the speech bubble",
   "mood": "calm"
 }
 
-Mood MUST be one of:
+The reaction should usually be under 60 characters.
+
+Mood must be exactly one of:
 calm
 happy
 annoyed
@@ -129,6 +177,10 @@ jealous`
                       type: "string"
                     },
 
+                    reaction: {
+                      type: "string"
+                    },
+
                     mood: {
                       type: "string",
 
@@ -146,6 +198,7 @@ jealous`
 
                   required: [
                     "reply",
+                    "reaction",
                     "mood"
                   ],
 
@@ -185,80 +238,27 @@ jealous`
     let outputText = "";
 
 
-    for (
-      const item of
-      data.output || []
-    ) {
+    for (const item of data.output || []) {
+      for (const content of item.content || []) {
 
-      for (
-        const content of
-        item.content || []
-      ) {
-
-        if (
-          content.type === "output_text"
-        ) {
-
-          outputText +=
-            content.text;
-
+        if (content.type === "output_text") {
+          outputText += content.text;
         }
 
       }
-
     }
 
 
-    if (!outputText) {
-      console.error(
-        "No output text:",
-        JSON.stringify(data)
-      );
-
-      return Response.json(
-        {
-          error:
-            "Elias returned no text."
-        },
-        {
-          status: 500
-        }
-      );
-    }
-
-
-    let parsed;
-
-
-    try {
-
-      parsed =
-        JSON.parse(outputText);
-
-    }
-
-    catch (error) {
-
-      console.error(
-        "JSON parse error:",
-        outputText
-      );
-
-      return Response.json(
-        {
-          error:
-            "Elias returned an invalid reply."
-        },
-        {
-          status: 500
-        }
-      );
-    }
+    const parsed =
+      JSON.parse(outputText);
 
 
     return Response.json({
       reply:
         parsed.reply,
+
+      reaction:
+        parsed.reaction,
 
       mood:
         parsed.mood
