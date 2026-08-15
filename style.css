@@ -1,0 +1,509 @@
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+
+  background:
+    radial-gradient(
+      circle at 50% 10%,
+      #292929 0%,
+      #121212 40%,
+      #070707 72%,
+      #030303 100%
+    );
+
+  color: white;
+
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    Arial,
+    sans-serif;
+
+  overflow-x: hidden;
+}
+
+
+/* ---------------- APP ---------------- */
+
+.app {
+  position: relative;
+
+  min-height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  padding:
+    max(22px, env(safe-area-inset-top))
+    20px
+    max(22px, env(safe-area-inset-bottom));
+}
+
+
+/* ---------------- TOP ---------------- */
+
+.topbar {
+  position: relative;
+
+  z-index: 20;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+h1 {
+  margin: 0;
+
+  font-size: 26px;
+
+  letter-spacing: 7px;
+}
+
+#status {
+  margin:
+    7px
+    0
+    0;
+
+  color: #777;
+
+  font-size: 12px;
+}
+
+
+.affection-box {
+  padding:
+    9px
+    13px;
+
+  background:
+    rgba(255,255,255,0.08);
+
+  border:
+    1px solid
+    rgba(255,255,255,0.08);
+
+  border-radius: 18px;
+
+  backdrop-filter:
+    blur(15px);
+
+  -webkit-backdrop-filter:
+    blur(15px);
+
+  font-size: 14px;
+}
+
+
+/* ---------------- ROOM ---------------- */
+
+.room {
+  position: relative;
+
+  flex: 1;
+
+  min-height: 510px;
+
+  display: flex;
+
+  justify-content: center;
+  align-items: flex-end;
+
+  overflow: hidden;
+}
+
+
+/* little glow behind Elias */
+
+.room::before {
+  content: "";
+
+  position: absolute;
+
+  width: 380px;
+  height: 380px;
+
+  bottom: 30px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(255,255,255,0.07),
+      rgba(255,255,255,0)
+      68%
+    );
+
+  pointer-events: none;
+}
+
+
+/* ---------------- SPEECH ---------------- */
+
+.speech-bubble {
+  position: absolute;
+
+  z-index: 10;
+
+  top: 35px;
+
+  width: 88%;
+  max-width: 340px;
+
+  padding:
+    16px
+    19px;
+
+  background:
+    rgba(255,255,255,0.96);
+
+  color: #111;
+
+  border-radius:
+    22px
+    22px
+    22px
+    7px;
+
+  font-size: 16px;
+  line-height: 1.4;
+
+  text-align: center;
+
+  box-shadow:
+    0 15px 40px
+    rgba(0,0,0,0.35);
+
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+
+/* ---------------- ELIAS ---------------- */
+
+.character {
+  position: relative;
+
+  z-index: 3;
+
+  width: min(88vw, 410px);
+
+  height: 405px;
+
+  display: flex;
+
+  justify-content: center;
+  align-items: flex-end;
+
+  transition:
+    transform 0.18s ease;
+}
+
+
+/* actual image */
+
+.elias-sprite {
+  display: block;
+
+  width: auto;
+  height: 410px;
+
+  max-width: 100%;
+
+  object-fit: contain;
+
+  object-position:
+    center bottom;
+
+  filter:
+    drop-shadow(
+      0 18px 20px
+      rgba(0,0,0,0.45)
+    );
+
+  transform-origin:
+    center bottom;
+
+  animation:
+    breathe
+    4s
+    ease-in-out
+    infinite;
+
+  transition:
+    opacity 0.14s ease,
+    filter 0.25s ease;
+}
+
+
+/* subtle idle movement */
+
+@keyframes breathe {
+
+  0%,
+  100% {
+    transform:
+      translateY(0)
+      scale(1);
+  }
+
+  50% {
+    transform:
+      translateY(-3px)
+      scale(1.004);
+  }
+
+}
+
+
+/* poke reaction */
+
+.character.poked {
+  animation:
+    pokeJump
+    0.25s ease;
+}
+
+@keyframes pokeJump {
+
+  0% {
+    transform:
+      translateY(0);
+  }
+
+  45% {
+    transform:
+      translateY(-14px)
+      rotate(-2deg);
+  }
+
+  100% {
+    transform:
+      translateY(0);
+  }
+
+}
+
+
+/* ---------------- MORI ---------------- */
+
+.mori {
+  position: absolute;
+
+  z-index: 7;
+
+  right: -4px;
+
+  bottom: 18px;
+
+  width: 115px;
+
+  text-align: center;
+
+  animation:
+    moriPop
+    0.35s
+    ease;
+}
+
+
+.mori-sprite {
+  display: block;
+
+  width: 100%;
+  height: auto;
+
+  filter:
+    drop-shadow(
+      0 10px 12px
+      rgba(0,0,0,0.55)
+    );
+}
+
+
+.mori span {
+  display: block;
+
+  margin-top: -3px;
+
+  color: #888;
+
+  font-size: 11px;
+}
+
+
+.hidden {
+  display: none;
+}
+
+
+@keyframes moriPop {
+
+  0% {
+    transform:
+      scale(0)
+      translateY(20px);
+  }
+
+  70% {
+    transform:
+      scale(1.08)
+      translateY(-3px);
+  }
+
+  100% {
+    transform:
+      scale(1)
+      translateY(0);
+  }
+
+}
+
+
+/* ---------------- MOOD ---------------- */
+
+.mood-line {
+  position: relative;
+
+  z-index: 20;
+
+  margin-bottom: 15px;
+
+  text-align: center;
+
+  color: #777;
+
+  font-size: 13px;
+}
+
+
+#moodText {
+  color: white;
+}
+
+
+/* ---------------- BUTTONS ---------------- */
+
+.buttons {
+  position: relative;
+
+  z-index: 20;
+
+  display: grid;
+
+  grid-template-columns:
+    1fr
+    1fr;
+
+  gap: 10px;
+}
+
+
+button {
+  min-height: 50px;
+
+  border: none;
+
+  border-radius: 17px;
+
+  padding: 13px;
+
+  background:
+    rgba(255,255,255,0.09);
+
+  color: white;
+
+  font-family: inherit;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  backdrop-filter:
+    blur(12px);
+
+  -webkit-backdrop-filter:
+    blur(12px);
+
+  transition:
+    transform 0.1s ease,
+    background 0.2s ease;
+}
+
+
+button:active {
+  transform:
+    scale(0.95);
+}
+
+
+.main-button {
+  grid-column:
+    span 2;
+
+  background: white;
+
+  color: #111;
+}
+
+
+/* ---------------- FOOTER ---------------- */
+
+footer {
+  position: relative;
+
+  z-index: 20;
+
+  padding-top: 17px;
+
+  text-align: center;
+
+  color: #3d3d3d;
+
+  font-size: 10px;
+
+  letter-spacing: 3px;
+}
+
+
+/* ---------------- SMALL PHONE ---------------- */
+
+@media (max-height: 750px) {
+
+  .room {
+    min-height: 420px;
+  }
+
+  .character {
+    height: 345px;
+  }
+
+  .elias-sprite {
+    height: 350px;
+  }
+
+  .speech-bubble {
+    top: 18px;
+  }
+
+  .mori {
+    width: 95px;
+  }
+
+}
