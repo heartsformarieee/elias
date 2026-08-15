@@ -1,5 +1,5 @@
 // ==========================================
-// ELIAS 1.1
+// ELIAS 1.3 - AI CHAT
 // ==========================================
 
 
@@ -29,11 +29,20 @@ const mori =
 const pokeButton =
   document.getElementById("pokeButton");
 
-const talkButton =
-  document.getElementById("talkButton");
-
 const moriButton =
   document.getElementById("moriButton");
+
+const chatForm =
+  document.getElementById("chatForm");
+
+const chatInput =
+  document.getElementById("chatInput");
+
+const sendButton =
+  document.getElementById("sendButton");
+
+const chatHistory =
+  document.getElementById("chatHistory");
 
 
 // ==========================================
@@ -41,6 +50,7 @@ const moriButton =
 // ==========================================
 
 const sprites = {
+
   calm:
     "https://i.postimg.cc/bD4fMZMM/elias-calm.png",
 
@@ -61,19 +71,21 @@ const sprites = {
 
   jealous:
     "https://i.postimg.cc/2b1f2QHL/elias-jealous.png"
+
 };
 
 
-// ==========================================
-// PRELOAD ALL SPRITES
-// ==========================================
+// preload sprites
 
-Object.values(sprites).forEach(
-  function(source) {
-    const image = new Image();
-    image.src = source;
-  }
-);
+Object.values(sprites).forEach(function(source) {
+
+  const image =
+    new Image();
+
+  image.src =
+    source;
+
+});
 
 
 // ==========================================
@@ -87,119 +99,61 @@ let affection =
     )
   ) || 0;
 
+
 let currentMood =
   localStorage.getItem(
     "eliasMood"
   ) || "calm";
+
+
+let conversation =
+  JSON.parse(
+    localStorage.getItem(
+      "eliasConversation"
+    ) || "[]"
+  );
+
 
 affectionText.textContent =
   affection;
 
 
 // ==========================================
-// DIALOGUE
-// ==========================================
-
-const dialogue = {
-
-  calm: [
-    "Hey, Marie.",
-    "There you are.",
-    "What are you doing?",
-    "I've just been hanging around.",
-    "You know I'm literally living in your phone now, right?",
-    "Hi. 🖤",
-    "You've returned.",
-    "I was wondering when you'd show up."
-  ],
-
-  happy: [
-    "Okay, fine. I'm happy to see you.",
-    "There she is.",
-    "You came back.",
-    "I like this arrangement.",
-    "Maybe living in your phone isn't so bad.",
-    "Marieee.",
-    "You get one smile. Don't get greedy.",
-    "I was hoping you'd open this."
-  ],
-
-  annoyed: [
-    "Marie.",
-    "Was that necessary?",
-    "Do that again. I dare you.",
-    "You're enjoying this way too much.",
-    "I'm judging you.",
-    "Stop poking me 😭",
-    "I have rights, you know.",
-    "Excuse me?",
-    "Why are you like this?"
-  ],
-
-  affectionate: [
-    "Stay for a little while.",
-    "I missed you.",
-    "You're my favorite notification.",
-    "Come talk to me.",
-    "I like when you're here.",
-    "Fine. You can stay.",
-    "🖤",
-    "I was waiting for you.",
-    "You're lucky I like you."
-  ],
-
-  sleepy: [
-    "I'm tired.",
-    "Why are we still awake?",
-    "Marie... bed.",
-    "Five more minutes.",
-    "Mori is probably already asleep.",
-    "If I fall asleep standing here, mind your business.",
-    "It's nighttime. Go get comfortable.",
-    "I refuse to be energetic right now."
-  ],
-
-  mischievous: [
-    "I didn't do anything.",
-    "Don't look at me like that.",
-    "Hypothetically... how attached are you to your settings?",
-    "Mori did it.",
-    "I have an idea.",
-    "Trust me.",
-    "Actually, no. Don't trust me.",
-    "I'm behaving.",
-    "Mostly."
-  ],
-
-  jealous: [
-    "Oh. So you wanted Mori.",
-    "Right. The cat. Of course.",
-    "I'm standing right here, by the way.",
-    "Mori gets all the attention. Interesting.",
-    "Fine. Go pet your precious cat.",
-    "I see how it is.",
-    "You summoned him before talking to me. Noted."
-  ]
-
-};
-
-
-// ==========================================
-// RANDOM HELPER
+// HELPERS
 // ==========================================
 
 function randomItem(array) {
+
   return array[
     Math.floor(
       Math.random() *
       array.length
     )
   ];
+
+}
+
+
+function saveConversation() {
+
+  // keep only recent messages
+
+  conversation =
+    conversation.slice(-20);
+
+
+  localStorage.setItem(
+    "eliasConversation",
+    JSON.stringify(
+      conversation
+    )
+  );
+
 }
 
 
 // ==========================================
-// SPEECH BUBBLE
+// SPEECH
 // ==========================================
 
 function showMessage(text) {
@@ -210,21 +164,20 @@ function showMessage(text) {
   bubble.style.transform =
     "translateY(6px)";
 
-  setTimeout(
-    function() {
 
-      bubble.textContent =
-        text;
+  setTimeout(function() {
 
-      bubble.style.opacity =
-        "1";
+    bubble.textContent =
+      text;
 
-      bubble.style.transform =
-        "translateY(0)";
+    bubble.style.opacity =
+      "1";
 
-    },
-    120
-  );
+    bubble.style.transform =
+      "translateY(0)";
+
+  }, 120);
+
 }
 
 
@@ -234,66 +187,57 @@ function showMessage(text) {
 
 function changeSprite(mood) {
 
-  const newSprite =
-    sprites[mood];
-
-  if (!newSprite) {
-    return;
+  if (!sprites[mood]) {
+    mood = "calm";
   }
+
 
   eliasSprite.style.opacity =
     "0";
 
-  setTimeout(
-    function() {
 
-      eliasSprite.src =
-        newSprite;
+  setTimeout(function() {
 
-      eliasSprite.style.opacity =
-        "1";
+    eliasSprite.src =
+      sprites[mood];
 
-    },
-    120
-  );
+    eliasSprite.style.opacity =
+      "1";
+
+  }, 120);
+
 }
 
 
 // ==========================================
-// SET MOOD
+// MOOD
 // ==========================================
 
-function setMood(
-  mood,
-  customMessage = null
-) {
+function setMood(mood) {
+
+  if (!sprites[mood]) {
+    mood = "calm";
+  }
+
 
   currentMood =
     mood;
+
 
   localStorage.setItem(
     "eliasMood",
     mood
   );
 
+
   moodText.textContent =
     mood;
+
 
   changeSprite(
     mood
   );
 
-  if (customMessage) {
-    showMessage(
-      customMessage
-    );
-  } else {
-    showMessage(
-      randomItem(
-        dialogue[mood]
-      )
-    );
-  }
 }
 
 
@@ -305,268 +249,526 @@ function increaseAffection(
   amount = 1
 ) {
 
-  affection += amount;
+  affection +=
+    amount;
+
 
   localStorage.setItem(
     "eliasAffection",
     affection
   );
 
+
   affectionText.textContent =
     affection;
+
 }
+
+
+// ==========================================
+// CHAT UI
+// ==========================================
+
+function addChatBubble(
+  role,
+  text
+) {
+
+  const message =
+    document.createElement("div");
+
+
+  message.classList.add(
+    "message"
+  );
+
+
+  if (role === "user") {
+
+    message.classList.add(
+      "user"
+    );
+
+  } else {
+
+    message.classList.add(
+      "elias"
+    );
+
+  }
+
+
+  message.textContent =
+    text;
+
+
+  chatHistory.appendChild(
+    message
+  );
+
+
+  chatHistory.scrollTop =
+    chatHistory.scrollHeight;
+
+}
+
+
+// restore previous visible chat
+
+conversation.forEach(function(item) {
+
+  addChatBubble(
+    item.role,
+    item.content
+  );
+
+});
+
+
+// ==========================================
+// SEND MESSAGE TO AI
+// ==========================================
+
+async function sendMessage(
+  message
+) {
+
+  const previousConversation =
+    [...conversation];
+
+
+  conversation.push({
+    role: "user",
+    content: message
+  });
+
+
+  addChatBubble(
+    "user",
+    message
+  );
+
+
+  saveConversation();
+
+
+  chatInput.value =
+    "";
+
+
+  sendButton.disabled =
+    true;
+
+
+  chatInput.disabled =
+    true;
+
+
+  statusText.textContent =
+    "typing...";
+
+
+  showMessage(
+    "..."
+  );
+
+
+  try {
+
+    const response =
+      await fetch(
+        "/api/chat",
+        {
+
+          method:
+            "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          body:
+            JSON.stringify({
+
+              message:
+                message,
+
+              history:
+                previousConversation
+
+            })
+
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.error ||
+        "Something went wrong."
+      );
+
+    }
+
+
+    const reply =
+      data.reply ||
+      "I'm here.";
+
+
+    const mood =
+      data.mood ||
+      "calm";
+
+
+    conversation.push({
+      role:
+        "assistant",
+
+      content:
+        reply
+    });
+
+
+    saveConversation();
+
+
+    addChatBubble(
+      "assistant",
+      reply
+    );
+
+
+    showMessage(
+      reply
+    );
+
+
+    setMood(
+      mood
+    );
+
+
+    increaseAffection(
+      1
+    );
+
+
+    statusText.textContent =
+      "online";
+
+  }
+
+  catch (error) {
+
+    console.error(
+      error
+    );
+
+
+    showMessage(
+      "Something went wrong. Try talking to me again?"
+    );
+
+
+    addChatBubble(
+      "assistant",
+      "Something went wrong. Try talking to me again?"
+    );
+
+
+    statusText.textContent =
+      "connection problem";
+
+  }
+
+  finally {
+
+    sendButton.disabled =
+      false;
+
+
+    chatInput.disabled =
+      false;
+
+
+    chatInput.focus();
+
+  }
+
+}
+
+
+// ==========================================
+// FORM
+// ==========================================
+
+chatForm.addEventListener(
+  "submit",
+  function(event) {
+
+    event.preventDefault();
+
+
+    const message =
+      chatInput.value.trim();
+
+
+    if (!message) {
+      return;
+    }
+
+
+    sendMessage(
+      message
+    );
+
+  }
+);
 
 
 // ==========================================
 // POKE ELIAS
 // ==========================================
 
-function pokeElias() {
+pokeButton.addEventListener(
+  "click",
+  function() {
 
-  character.classList.remove(
-    "poked"
-  );
-
-  void character.offsetWidth;
-
-  character.classList.add(
-    "poked"
-  );
-
-  increaseAffection(1);
-
-  const chance =
-    Math.random();
-
-  if (chance < 0.55) {
-    setMood("annoyed");
-  }
-
-  else if (chance < 0.80) {
-    setMood("mischievous");
-  }
-
-  else {
-    setMood("affectionate");
-  }
+    character.classList.remove(
+      "poked"
+    );
 
 
-  if (affection === 5) {
+    void character.offsetWidth;
+
+
+    character.classList.add(
+      "poked"
+    );
+
+
+    increaseAffection(
+      1
+    );
+
+
+    const lines = [
+      "Marie.",
+      "Was that necessary?",
+      "You're enjoying this way too much.",
+      "Excuse me?",
+      "Stop poking me 😭"
+    ];
+
+
     showMessage(
-      "Five pokes already. I'm beginning to understand you."
+      randomItem(lines)
     );
-  }
 
-  if (affection === 10) {
+
     setMood(
-      "annoyed",
-      "Ten times, Marie. Are we proud of ourselves?"
+      Math.random() < 0.65
+        ? "annoyed"
+        : "mischievous"
     );
-  }
 
-  if (affection === 25) {
-    showMessage(
-      "Twenty-five. This is becoming a lifestyle."
-    );
   }
-
-  if (affection === 50) {
-    setMood(
-      "annoyed",
-      "FIFTY pokes. Marie. 😭"
-    );
-  }
-
-  if (affection === 100) {
-    setMood(
-      "affectionate",
-      "One hundred pokes. At this point I'm assuming this is how you show affection."
-    );
-  }
-}
+);
 
 
 // ==========================================
-// TALK
+// TAP ELIAS
 // ==========================================
 
-function talkToElias() {
+character.addEventListener(
+  "click",
+  function() {
 
-  increaseAffection(1);
-
-  if (
-    affection > 20 &&
-    Math.random() < 0.38
-  ) {
-    setMood(
-      "affectionate"
+    increaseAffection(
+      1
     );
-    return;
+
+
+    const lines = [
+      "Yes?",
+      "You wanted my attention?",
+      "I'm right here.",
+      "Hey.",
+      "You could just text me, you know."
+    ];
+
+
+    showMessage(
+      randomItem(lines)
+    );
+
+
+    setMood(
+      Math.random() < 0.5
+        ? "affectionate"
+        : "calm"
+    );
+
   }
-
-  const moods = [
-    "calm",
-    "happy",
-    "affectionate",
-    "mischievous"
-  ];
-
-  setMood(
-    randomItem(moods)
-  );
-}
+);
 
 
 // ==========================================
 // MORI
 // ==========================================
 
-function toggleMori() {
+moriButton.addEventListener(
+  "click",
+  function() {
 
-  const isHidden =
-    mori.classList.contains(
-      "hidden"
-    );
-
-  if (isHidden) {
-
-    mori.classList.remove(
-      "hidden"
-    );
-
-    const chance =
-      Math.random();
-
-    if (chance < 0.65) {
-      setMood(
-        "jealous",
-        randomItem(
-          dialogue.jealous
-        )
+    const hidden =
+      mori.classList.contains(
+        "hidden"
       );
+
+
+    if (hidden) {
+
+      mori.classList.remove(
+        "hidden"
+      );
+
+
+      setMood(
+        "jealous"
+      );
+
+
+      showMessage(
+        "Oh. You wanted Mori. Of course."
+      );
+
     }
 
     else {
-      setMood(
-        "happy",
-        "There. Mori has been summoned."
+
+      mori.classList.add(
+        "hidden"
       );
+
+
+      setMood(
+        "mischievous"
+      );
+
+
+      showMessage(
+        "He's wandered off again."
+      );
+
     }
 
   }
-
-  else {
-
-    mori.classList.add(
-      "hidden"
-    );
-
-    setMood(
-      "mischievous",
-      "Mori has apparently decided we're beneath him."
-    );
-  }
-}
+);
 
 
 // ==========================================
-// TIME OF DAY
+// TIME STARTUP
 // ==========================================
 
-function timeReaction() {
+function startupGreeting() {
 
   const hour =
     new Date().getHours();
+
 
   if (
     hour >= 0 &&
     hour < 5
   ) {
+
     statusText.textContent =
       "wondering why you're awake";
 
+
     setMood(
-      "sleepy",
-      "Marie. Why are you awake?"
+      "sleepy"
     );
+
+
+    showMessage(
+      "Marie. It's after midnight."
+    );
+
   }
 
   else if (
-    hour >= 5 &&
     hour < 10
   ) {
+
     statusText.textContent =
       "barely awake";
 
+
     setMood(
-      "sleepy",
-      "Morning. I'm not awake enough for this yet."
+      "sleepy"
     );
+
+
+    showMessage(
+      "Morning."
+    );
+
   }
 
   else if (
-    hour >= 10 &&
-    hour < 17
+    hour < 18
   ) {
+
     statusText.textContent =
-      "hanging around";
+      "online";
+
 
     setMood(
       "calm"
     );
-  }
 
-  else if (
-    hour >= 17 &&
-    hour < 22
-  ) {
-    statusText.textContent =
-      "happy you're here";
 
-    setMood(
-      "happy",
-      "There you are. How was your day?"
+    showMessage(
+      "Hey, Marie."
     );
+
   }
 
   else {
+
     statusText.textContent =
-      "getting sleepy";
+      "online";
+
 
     setMood(
-      "sleepy",
-      "It's late, Marie. I'm keeping an eye on you."
+      "happy"
     );
+
+
+    showMessage(
+      "There you are."
+    );
+
   }
+
 }
 
 
 // ==========================================
-// BUTTONS
-// ==========================================
-
-pokeButton.addEventListener(
-  "click",
-  pokeElias
-);
-
-talkButton.addEventListener(
-  "click",
-  talkToElias
-);
-
-moriButton.addEventListener(
-  "click",
-  toggleMori
-);
-
-
-// ==========================================
-// START ELIAS
+// START
 // ==========================================
 
 eliasSprite.src =
   sprites[currentMood] ||
   sprites.calm;
 
-timeReaction();
+
+startupGreeting();
