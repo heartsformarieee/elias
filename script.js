@@ -390,13 +390,17 @@ async function sendMessage(
 
           body:
             JSON.stringify({
-
               message:
                 message,
 
               history:
-                previousConversation
+                previousConversation,
 
+              affection:
+                affection,
+
+              hour:
+                new Date().getHours()
             })
 
         }
@@ -421,6 +425,9 @@ async function sendMessage(
       data.reply ||
       "I'm here.";
 
+    const reaction =
+      data.reaction ||
+      reply;
 
     const mood =
       data.mood ||
@@ -446,7 +453,7 @@ async function sendMessage(
 
 
     showMessage(
-      reply
+      reaction
     );
 
 
