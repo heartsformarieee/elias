@@ -531,3 +531,38 @@ footer {
   }
 
 }
+
+.typing-indicator {
+  margin:
+    0
+    0
+    10px
+    4px;
+
+  color: #777;
+
+  font-size: 13px;
+}
+
+.dots {
+  display: inline-block;
+
+  animation:
+    blinkDots
+    1.2s
+    infinite;
+}
+
+@keyframes blinkDots {
+  0% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.3;
+  }
+}
