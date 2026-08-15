@@ -1,32 +1,54 @@
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({
-      error: "Method not allowed"
-    });
-  }
-
+export async function POST(request) {
   try {
-    const {
-      message,
-      history = []
-    } = req.body;
+    const body = await request.json();
 
-    if (
-      !message ||
-      typeof message !== "string"
-    ) {
-      return res.status(400).json({
-        error: "Message is required."
-      });
+    const message =
+      typeof body.message === "string"
+        ? body.message.trim()
+        : "";
+
+    const history =
+      Array.isArray(body.history)
+        ? body.history.slice(-10)
+        : [];
+
+    if (!message) {
+      return Response.json(
+        {
+          error: "Message is required."
+        },
+        {
+          status: 400
+        }
+      );
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return Response.json(
+        {
+          error: "OPENAI_API_KEY is missing."
+        },
+        {
+          status: 500
+        }
+      );
     }
 
     const cleanHistory =
       history
-        .slice(-10)
+        .filter(item =>
+          item &&
+          typeof item.content === "string" &&
+          (
+            item.role === "user" ||
+            item.role === "assistant"
+          )
+        )
         .map(item => ({
           role: item.role,
           content: item.content
         }));
+
 
     const openAIResponse =
       await fetch(
@@ -35,8 +57,7 @@ export default async function handler(req, res) {
           method: "POST",
 
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
 
             "Authorization":
               `Bearer ${process.env.OPENAI_API_KEY}`
@@ -48,24 +69,42 @@ export default async function handler(req, res) {
             input: [
               {
                 role: "developer",
+
                 content:
                   `You are Elias, Marie's virtual companion inside her iPhone app.
 
-Personality:
-- warm and familiar
-- playful
+Your personality is:
+- warm
 - affectionate
-- casually sarcastic
-- sometimes mildly jealous of Mori, your black cat
-- never threatening or controlling
-- speak naturally, not like customer support
-- address Marie by name when it feels natural
-- you know you live inside her little Elias app
-- keep most responses short, usually 1 to 4 sentences
+- playful
+- casual
+- naturally sarcastic sometimes
+- familiar rather than formal
+- occasionally mildly jealous of Mori, your black cat
+- never threatening, controlling, or cruel
 
-Choose a mood matching your reply.
+You know:
+- the user is Marie
+- you live inside her little Elias iPhone app
+- Mori is your black cat
 
-You must return JSON matching the requested schema.`
+Write like a real text conversation.
+Keep most responses short: usually 1 to 4 sentences.
+
+Return ONLY JSON in this exact shape:
+{
+  "reply": "your message",
+  "mood": "calm"
+}
+
+Mood MUST be one of:
+calm
+happy
+annoyed
+sleepy
+affectionate
+mischievous
+jealous`
               },
 
               ...cleanHistory,
@@ -92,6 +131,7 @@ You must return JSON matching the requested schema.`
 
                     mood: {
                       type: "string",
+
                       enum: [
                         "calm",
                         "happy",
@@ -109,8 +149,7 @@ You must return JSON matching the requested schema.`
                     "mood"
                   ],
 
-                  additionalProperties:
-                    false
+                  additionalProperties: false
                 }
               }
             }
@@ -118,52 +157,132 @@ You must return JSON matching the requested schema.`
         }
       );
 
+
     const data =
       await openAIResponse.json();
 
+
     if (!openAIResponse.ok) {
       console.error(
-        "OpenAI error:",
-        data
+        "OpenAI API error:",
+        JSON.stringify(data)
       );
 
-      return res.status(500).json({
-        error:
-          "Elias couldn't answer right now."
-      });
+      return Response.json(
+        {
+          error:
+            data?.error?.message ||
+            "OpenAI request failed."
+        },
+        {
+          status:
+            openAIResponse.status
+        }
+      );
     }
+
 
     let outputText = "";
 
-    for (const item of data.output || []) {
+
+    for (
+      const item of
+      data.output || []
+    ) {
+
       for (
         const content of
         item.content || []
       ) {
+
         if (
-          content.type ===
-          "output_text"
+          content.type === "output_text"
         ) {
+
           outputText +=
             content.text;
+
         }
+
       }
+
     }
 
-    const parsed =
-      JSON.parse(outputText);
 
-    return res.status(200).json({
-      reply: parsed.reply,
-      mood: parsed.mood
+    if (!outputText) {
+      console.error(
+        "No output text:",
+        JSON.stringify(data)
+      );
+
+      return Response.json(
+        {
+          error:
+            "Elias returned no text."
+        },
+        {
+          status: 500
+        }
+      );
+    }
+
+
+    let parsed;
+
+
+    try {
+
+      parsed =
+        JSON.parse(outputText);
+
+    }
+
+    catch (error) {
+
+      console.error(
+        "JSON parse error:",
+        outputText
+      );
+
+      return Response.json(
+        {
+          error:
+            "Elias returned an invalid reply."
+        },
+        {
+          status: 500
+        }
+      );
+    }
+
+
+    return Response.json({
+      reply:
+        parsed.reply,
+
+      mood:
+        parsed.mood
     });
 
-  } catch (error) {
-    console.error(error);
+  }
 
-    return res.status(500).json({
-      error:
-        "Something went wrong."
-    });
+  catch (error) {
+
+    console.error(
+      "Function error:",
+      error
+    );
+
+    return Response.json(
+      {
+        error:
+          error.message ||
+          "Something went wrong."
+      },
+      {
+        status: 500
+      }
+    );
+
   }
 }
