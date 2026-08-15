@@ -5,6 +5,11 @@
 
 // ---------------- ELEMENTS ----------------
 
+const typingIndicator =
+  document.getElementById(
+    "typingIndicator"
+  );
+
 const bubble =
   document.getElementById("speechBubble");
 
