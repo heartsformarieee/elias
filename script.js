@@ -772,3 +772,24 @@ eliasSprite.src =
 
 
 startupGreeting();
+
+catch (error) {
+
+  console.error(error);
+
+  const errorMessage =
+    error.message ||
+    "Something went wrong.";
+
+  showMessage(
+    errorMessage
+  );
+
+  addChatBubble(
+    "assistant",
+    errorMessage
+  );
+
+  statusText.textContent =
+    "connection problem";
+}
